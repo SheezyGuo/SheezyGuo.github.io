@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+<html class="theme-next gemini use-motion" lang="zh-CN">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+
+
+
+  
+  
+  <link rel="stylesheet" href="/lib/needsharebutton/needsharebutton.css">
+
+
+
+
+  
+  
+    
+    
+  <script src="/lib/pace/pace.min.js?v=1.0.2"></script>
+  <link href="/lib/pace/pace-theme-minimal.min.css?v=1.0.2" rel="stylesheet">
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+  <meta name="baidu-site-verification" content="true">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=6.4.2" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon32.png?v=6.4.2">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon16.png?v=6.4.2">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=6.4.2" color="#222">
+
+
+
+
+
+
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Gemini',
+    version: '6.4.2',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: false,
+    fastclick: false,
+    lazyload: false,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+  
+
+
+
+
+  <meta name="description" content="在上一篇文章中,我们发现类继承过程中,如果父类定义的方法如果子类没有重写或者重载的话,子类由于继承关系虽然能访问这个方法,但是执行的操作是在Base类之上的,这和我们的预期不同.在Child类中通过覆盖父类方法,并添加相关处理逻辑可以解决这个问题,但仔细思考了一下之后,感觉还是有点疑惑. 为什么Child类的实例里执行没有覆盖直接继承的方法,比如clear(见下方研究代码部分),这个方法对chil">
+<meta name="keywords" content="Java,继承">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java中方法调用过程的一个疑惑">
+<meta property="og:url" content="https://sheezyguo.github.io/2018/11/02/j3/index.html">
+<meta property="og:site_name" content="柿子的博客(〃&#39;▽&#39;〃)">
+<meta property="og:description" content="在上一篇文章中,我们发现类继承过程中,如果父类定义的方法如果子类没有重写或者重载的话,子类由于继承关系虽然能访问这个方法,但是执行的操作是在Base类之上的,这和我们的预期不同.在Child类中通过覆盖父类方法,并添加相关处理逻辑可以解决这个问题,但仔细思考了一下之后,感觉还是有点疑惑. 为什么Child类的实例里执行没有覆盖直接继承的方法,比如clear(见下方研究代码部分),这个方法对chil">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541331506443.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541331658409.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541306545341.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541313605263.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541331914385.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541313325932.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541313408861.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541334057489.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541334095356.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541313605263.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541335986772.png">
+<meta property="og:image" content="https://sheezyguo.github.io/2018/11/assets/1541336049090.png">
+<meta property="og:updated_time" content="2018-11-04T12:59:06.462Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java中方法调用过程的一个疑惑">
+<meta name="twitter:description" content="在上一篇文章中,我们发现类继承过程中,如果父类定义的方法如果子类没有重写或者重载的话,子类由于继承关系虽然能访问这个方法,但是执行的操作是在Base类之上的,这和我们的预期不同.在Child类中通过覆盖父类方法,并添加相关处理逻辑可以解决这个问题,但仔细思考了一下之后,感觉还是有点疑惑. 为什么Child类的实例里执行没有覆盖直接继承的方法,比如clear(见下方研究代码部分),这个方法对chil">
+<meta name="twitter:image" content="https://sheezyguo.github.io/2018/11/assets/1541331506443.png">
+
+
+
+
+
+
+  <link rel="canonical" href="https://sheezyguo.github.io/2018/11/02/j3/">
+
+
+
+<script type="text/javascript" id="page.configurations">
+  CONFIG.page = {
+    sidebar: "",
+  };
+</script>
+
+  <title>Java中方法调用过程的一个疑惑 | 柿子的博客(〃'▽'〃)</title>
+  
+
+
+
+
+
+
+  <script type="text/javascript">
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "https://hm.baidu.com/hm.js?ff8594f9355a105536540822ea259c67";
+      var s = document.getElementsByTagName("script")[0];
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+
+
+
+
+
+  <noscript>
+  <style type="text/css">
+    .use-motion .motion-element,
+    .use-motion .brand,
+    .use-motion .menu-item,
+    .sidebar-inner,
+    .use-motion .post-block,
+    .use-motion .pagination,
+    .use-motion .comments,
+    .use-motion .post-header,
+    .use-motion .post-body,
+    .use-motion .collection-title { opacity: initial; }
+
+    .use-motion .logo,
+    .use-motion .site-title,
+    .use-motion .site-subtitle {
+      opacity: initial;
+      top: initial;
+    }
+
+    .use-motion {
+      .logo-line-before i { left: initial; }
+      .logo-line-after i { right: initial; }
+    }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-CN">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">柿子的博客(〃'▽'〃)</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+    
+      
+        <p class="site-subtitle">用进废退,放码过来</p>
+      
+    
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+
+<nav class="site-nav">
+  
+    <ul id="menu" class="menu">
+      
+        
+        
+        
+          
+          <li class="menu-item menu-item-home">
+    <a href="/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-tags">
+    <a href="/tags/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>标签<span class="badge">4</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-categories">
+    <a href="/categories/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类<span class="badge">2</span></a>
+  </li>
+        
+        
+        
+          
+          <li class="menu-item menu-item-archives">
+    <a href="/archives/" rel="section">
+      <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档<span class="badge">4</span></a>
+  </li>
+
+      
+      
+    </ul>
+  
+
+  
+
+  
+</nav>
+
+
+
+  
+
+
+
+</div>
+    </header>
+
+    
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+            
+
+          
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  
+    <div class="reading-progress-bar"></div>
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://sheezyguo.github.io/2018/11/02/j3/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="柿子君">
+      <meta itemprop="description" content="一只睡不醒的程序猿">
+      <meta itemprop="image" content="/images/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="柿子的博客(〃'▽'〃)">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Java中方法调用过程的一个疑惑
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+
+            
+            
+            
+
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+
+              
+                
+              
+
+              <time title="创建时间：2018-11-02 21:01:55" itemprop="dateCreated datePublished" datetime="2018-11-02T21:01:55+08:00">2018-11-02</time>
+            
+
+            
+              
+
+              
+                
+                <span class="post-meta-divider">|</span>
+                
+
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">更新于</span>
+                
+                <time title="修改时间：2018-11-04 20:59:06" itemprop="dateModified" datetime="2018-11-04T20:59:06+08:00">2018-11-04</time>
+              
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope="" itemtype="http://schema.org/Thing"><a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/11/02/j3/#comments" itemprop="discussionUrl">
+                  <span class="post-meta-item-text">评论数：</span> <span class="post-comments-count valine-comment-count" data-xid="/2018/11/02/j3/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/11/02/j3/" class="leancloud_visitors" data-flag-title="Java中方法调用过程的一个疑惑">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数：</span>
+               
+                  <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+            <div class="post-symbolscount">
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">本文字数：</span>
+                
+                <span title="本文字数">11k</span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">19 分钟</span>
+              
+            </div>
+          
+
+          
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>在上一篇文章中,我们发现类继承过程中,如果父类定义的方法如果子类没有重写或者重载的话,子类由于继承关系虽然能访问这个方法,但是执行的操作是在Base类之上的,这和我们的预期不同.在Child类中通过覆盖父类方法,并添加相关处理逻辑可以解决这个问题,但仔细思考了一下之后,感觉还是有点疑惑.</p>
+<p>为什么Child类的实例里执行没有覆盖直接继承的方法,比如clear(见下方<strong>研究代码</strong>部分),这个方法对child的成员变量并没有效果,而是对其父类操作,这和我之前理解的<strong>动态绑定</strong>的过程不一致.<br><a id="more"></a></p>
+<h2 id="相关知识"><a href="#相关知识" class="headerlink" title="相关知识"></a>相关知识</h2><h3 id="代码示例"><a href="#代码示例" class="headerlink" title="代码示例"></a>代码示例</h3><h4 id="Base代码"><a href="#Base代码" class="headerlink" title="Base代码"></a>Base代码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> s;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> a;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"基类静态代码块, s: "</span> + s);</span><br><span class="line">        s = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        System.out.println(<span class="string">"基类实例代码块, a: "</span> + a);</span><br><span class="line">        a = <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Base</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"基类构造方法, a: "</span> + a);</span><br><span class="line">        a = <span class="number">2</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">step</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"base s: "</span> + s + <span class="string">", a: "</span> + a);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">action</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"start"</span>);</span><br><span class="line">        step();</span><br><span class="line">        System.out.println(<span class="string">"end"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="Child代码"><a href="#Child代码" class="headerlink" title="Child代码"></a>Child代码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword">extends</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> s;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> a;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"子类静态代码块, s: "</span>+s);</span><br><span class="line">        s = <span class="number">10</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        System.out.println(<span class="string">"子类实例代码块, a: "</span> + a);</span><br><span class="line">        a = <span class="number">10</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Child</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"子类构造方法, a: "</span> + a);</span><br><span class="line">        a = <span class="number">20</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">step</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"child s: "</span> + s + <span class="string">", a: "</span> + a);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="调用代码"><a href="#调用代码" class="headerlink" title="调用代码"></a>调用代码</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"---- new Child()"</span>);</span><br><span class="line">    Child c = <span class="keyword">new</span> Child();</span><br><span class="line">    System.out.println(<span class="string">"\n---- c.action()"</span>);</span><br><span class="line">    c.action();</span><br><span class="line">    Base b = c;</span><br><span class="line">    System.out.println(<span class="string">"\n---- b.action()"</span>);</span><br><span class="line">    b.action();</span><br><span class="line">    System.out.println(<span class="string">"\n---- b.s: "</span> + b.s);</span><br><span class="line">    System.out.println(<span class="string">"\n---- c.s: "</span> + c.s);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h4 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h4><p>—- new Child()<br>基类静态代码块, s: 0<br>子类静态代码块, s: 0<br>基类实例代码块, a: 0<br>基类构造方法, a: 1<br>子类实例代码块, a: 0<br>子类构造方法 a: 10<br>—- c.action()<br>start<br>child s: 10, a: 20<br>end<br>—- b.action()<br>start<br>child s: 10, a: 20<br>end<br>—- b.s: 1<br>—- c.s: 10</p>
+<h4 id="补充知识"><a href="#补充知识" class="headerlink" title="补充知识"></a>补充知识</h4><h5 id="普通代码块"><a href="#普通代码块" class="headerlink" title="普通代码块"></a>普通代码块</h5><p>在方法或语句中出现的{}就称为普通代码块。<br>普通代码块和一般的语句执行顺序由他们在代码中出现的次序决定–“先出现先执行”</p>
+<h5 id="构造代码块"><a href="#构造代码块" class="headerlink" title="构造代码块"></a>构造代码块</h5><p>直接在类中定义且没有加static关键字的代码块称为{}构造代码块。<br>构造代码块<strong>在创建对象时被调用</strong>，<strong>每次创建对象都会被调用</strong>，<strong>并且构造代码块的执行次序优先于类构造函数</strong>。<br>这个构造代码块的执行顺序不会因为方法所在位置而影响，我特意将他放在构造函数之后。</p>
+<h5 id="静态代码块"><a href="#静态代码块" class="headerlink" title="静态代码块"></a>静态代码块</h5><p>在java中使用static关键字声明的代码块,<strong>包括使用静态方法对静态变量赋值</strong>.<br>静态块用于初始化类，为类的属性初始化。<strong>每个静态代码块只会执行一次</strong>。<br>由于JVM在加载类时会执行静态代码块，所以静态代码块先于主方法执行。<br>如果类中包含多个静态代码块，那么将按照”<strong>先定义的代码先执行，后定义的代码后执行</strong>“。<br>注意：</p>
+<ol>
+<li>静态代码块不能存在于任何方法体内。</li>
+<li>静态代码块不能直接访问静态实例变量和实例方法，需要通过</li>
+</ol>
+<h5 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h5><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Line</span> </span>&#123;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.println(<span class="string">"静态代码块执行：loading line"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">static</span> String s = getString();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">static</span> String <span class="title">getString</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"给静态变量赋值的静态方法执行：loading line"</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="string">"ss"</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">test</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"普通静态方法执行：loading line"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Line</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"构造方法执行：loading line"</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        System.out.println(<span class="string">"构造代码块执行"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>调用</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LineTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"主方法"</span>);</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(<span class="string">"main方法中最开始的，普通代码块执行"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        Line line = <span class="keyword">new</span> Line();</span><br><span class="line">        System.out.println(<span class="string">"..............."</span>);</span><br><span class="line">        Line line1 = <span class="keyword">new</span> Line();</span><br><span class="line">        System.out.println(<span class="string">"..............."</span>);</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(<span class="string">"main方法中结尾事的，普通代码块执行"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>结果</p>
+<p><img src="../../assets/1541331506443.png" alt="1541331506443"></p>
+<p>注意红箭头所指的两部分的顺序取决于它出现的顺序</p>
+<p><img src="../../assets/1541331658409.png" alt="1541331658409"></p>
+<p>##### </p>
+<p>下面我们来解释一下背后都发生了一些什么事情，从类的加载开始。</p>
+<h3 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h3><p>在Java中，所谓类的加载是指将类的相关信息加载到内存。在Java中，类是动态加载的，<strong>当第一次使用这个类的时候才会加载</strong>，加载一个类时，<strong>会查看其父类是否已加载，如果没有，则会加载其父类</strong>。</p>
+<h4 id="类的信息"><a href="#类的信息" class="headerlink" title="类的信息"></a>类的信息</h4><p>一个类的信息主要包括以下部分</p>
+<ul>
+<li><p>类变量（静态变量)</p>
+</li>
+<li><p>类初始化代码</p>
+</li>
+<li><p>类方法（静态方法)</p>
+</li>
+<li><p>实例变量</p>
+</li>
+<li><p>实例初始化代码</p>
+</li>
+<li><p>实例方法</p>
+</li>
+<li><p><strong>父类信息引用</strong>   </p>
+</li>
+</ul>
+<p>类初始化代码包括</p>
+<ul>
+<li><p>定义静态变量时的赋值语旬</p>
+</li>
+<li><p>静态初始化代码块 </p>
+</li>
+</ul>
+<p>实例初始化代码包括</p>
+<ul>
+<li><p>定义实例变量时的赋值语旬</p>
+</li>
+<li><p>实例初始化代码块</p>
+</li>
+<li><p><strong>构造方法</strong> </p>
+</li>
+</ul>
+<h4 id="类加载过程包括"><a href="#类加载过程包括" class="headerlink" title="类加载过程包括"></a>类加载过程包括</h4><ol>
+<li><p>分配内存保存类的信息</p>
+</li>
+<li><p><strong>给类变量赋默认值</strong></p>
+</li>
+<li><p>加载父类</p>
+</li>
+<li><p>设置父子关系</p>
+</li>
+<li><p>执行类初始化代码</p>
+</li>
+</ol>
+<p>注意，<strong>类初始化代码，是先执行父类的，再执行子类的</strong>。不过，父类执行时，<strong>子类静态变量的值也是有的(类变量赋默认值在执行类初始化代码之前)</strong>，是默认值。对千默认值，我们之前说过，数字型变量都是0，boolean是false，char是’\u0000’，引用型变量是null。</p>
+<p>之前我们说过，内存分为栈和堆，栈存放函数的局部变量，而堆存放动态分配的对象，还有一个内存区，存放类的信息，这个区在Java中称为<strong>方法区</strong>。</p>
+<p>加载后，Java方法区就有了一份这个类的信息。以我们的例子来说，有3份类信息，分别是Child、</p>
+<p>Base、Object，内存布局如下图所示。</p>
+<p><img src="../../assets/1541306545341.png" alt="1541306545341"></p>
+<p>从上图也可以看出,类信息包括这几部分,这和前面说的一致</p>
+<ol>
+<li><p>父类信息</p>
+</li>
+<li><p>静态变量,在类信息里以<strong>常量</strong>的方式存在</p>
+</li>
+<li>实例变量定义,在类信息里以<strong>引用</strong>的方式存在</li>
+<li>类初始化代码</li>
+<li>实例初始化代码</li>
+<li>实例方法</li>
+</ol>
+<p>我们用class_init()来表示类初始化代码，用instance_init()表示实例初始化代码，实例初始化代码   包括了实例初始化代码块和构造方法。例子中只有一个构造方法，实际情况则可能有多个实例初始化方法。</p>
+<p>本例中，类的加载大致就是在内存中形成了类似上面的布局，然后分别执行了Base和Child的类初始化代码。接下来，我们看对象创建的过程。</p>
+<h3 id="对象创建的过程"><a href="#对象创建的过程" class="headerlink" title="对象创建的过程"></a>对象创建的过程</h3><p>在类加载之后，new Child()就是创建Child对象，创建对象过程包括：</p>
+<ol>
+<li><p>分配内存</p>
+</li>
+<li><p>对所有实例变赋默认值</p>
+</li>
+<li><p>执行实例初始化代码</p>
+</li>
+</ol>
+<p>分配的内存包括本类和<strong>所有父类</strong>的实例变量，但不包括任何静态变量。实例初始化代码的执行从父类开始，再执行子类的。但在任何类执行初始化代码之前，所有实例变量都已设置完默认值。</p>
+<p><strong>每个对象除了保存类的实例变量之外，还保存着实际类信息的引用。</strong></p>
+<p>Child c=new Child()；会将新创建的Child对象引用赋给变晕c，而Base b=c；会让b也引用这个Child</p>
+<p>对象。创建和赋值后，内存布局如下图所示。</p>
+<p><img src="../../assets/1541313605263.png" alt="1541313605263"></p>
+<p>引用型变晕c和b分配在栈中，它们<strong>指向相同的堆中的Child对象</strong>。<strong>Child对象存储着方法区中Child类型的地址，<u>还有Base中的实例变晕a和Child中的实例变晕a</u></strong>。创建了对象，接下来，来看方法调用的过程。</p>
+<h3 id="方法调用的过程"><a href="#方法调用的过程" class="headerlink" title="方法调用的过程"></a>方法调用的过程</h3><p>我们先来看c.action();,这旬代码的执行过程：</p>
+<ol>
+<li><p>查看c的对象类型，找到Child类型，在Child类型中找action方法，发现没有，到父类中寻找；</p>
+</li>
+<li><p>在父类Base中找到了方法action，开始执行action方法；</p>
+</li>
+<li><p>action先输出了start，然后发现需要调用step()方法，就从Child类型开始寻找step()方法；</p>
+</li>
+<li><p>在Child类型中找到了step()方法，执行Child中的step()方法，执行完后返回action方法；</p>
+</li>
+<li><p>继续执行action方法，输出end。</p>
+</li>
+</ol>
+<p>寻找要执行的实例方法的时候，是从对象的实际类型信息开始查找的，找不到的时候，再查找父类类型信息。</p>
+<p>我们来看b.action()，这旬代码的输出和c.action()是一样的，这称为动态绑定，而动态绑定实现的机制就是根据对象的实际类型查找要执行的方法，子类型中找不到的时候再查找父类。这里，因为b和c 指向相同的对象，所以执行结果是一样的。</p>
+<p>这里注意<strong>动态绑定</strong>过程,方法的查找顺序是自底向上,由于Child类没有重写action方法,c.action();调用的是Base的action</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">action</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    System.out.println(<span class="string">"start"</span>);</span><br><span class="line">    step();</span><br><span class="line">    System.out.println(<span class="string">"end"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>可以看到action调用了step方法,由于Child类重写了step方法,实例c找到的step方法就是Child类的step方法.这和上一篇里的clear方法的查找过程是一致的,但这里又有一个新的值得注意的地方,clear例子中clear修改的是父类实例变量,而这里的step操作的是子类变量.究其原因,和以下内容有关.</p>
+<h4 id="虚方法表"><a href="#虚方法表" class="headerlink" title="虚方法表"></a>虚方法表</h4><p>如果继承的层次比较深，要调用的方法位千比较上层的父类，则调用的效率是比较低的，因为每次调用都要进行很多次查找。大多数系统使用一种称为虚方法表的方法来优化调用的效率。</p>
+<p>所谓虚方法表，<strong>就是在类加载的时候为每个类创建一个表，记录该类的对象所有动态绑定的方法   (包括父类的方法)及其地址</strong>，但一个方法只有一条记录，子类重写了父类方法后只会保留子类的。对于本例来说，Child和Base的虚方法表如图下所示。</p>
+<p><img src="../../assets/1541331914385.png" alt="1541331914385"></p>
+<p>Child类的实例c在调用action时,Child没有action方法,故向上查父类,在直接父类Base中找到了,Base中的action调用了step,实例c继续查找step,Child类里有step方法,于是调用的是Child的step方法.</p>
+<p>虚方法表的设计理念与操作系统里的缓存有类似之处,不过缓存是储存最近一段时间里最常访问的记录,会动态变化,而虚方法表是固定的,这么来说虚方法表更像数据库里的索引,不过索引到最后可能也有个顺序查找的过程.</p>
+<h2 id="研究代码"><a href="#研究代码" class="headerlink" title="研究代码"></a>研究代码</h2><p><strong>以下是个人的理解,不正之处欢迎指出</strong></p>
+<h3 id="Base类"><a href="#Base类" class="headerlink" title="Base类"></a>Base类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> arr[];</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> MAX_NUM = <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Base</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass());</span><br><span class="line">        <span class="keyword">this</span>.count = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">this</span>.arr = <span class="keyword">new</span> <span class="keyword">int</span>[MAX_NUM];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> arr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass());</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">            arr[i] = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        count = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> num)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (count &lt; MAX_NUM) &#123;</span><br><span class="line">            arr[count++] = num;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(<span class="keyword">int</span>[] arr)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"addAll"</span> + <span class="keyword">this</span>.getClass());</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i : arr) &#123;</span><br><span class="line">            <span class="keyword">if</span> (count &lt; MAX_NUM) &#123;</span><br><span class="line">                <span class="keyword">this</span>.arr[count++] = i;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="Child类"><a href="#Child类" class="headerlink" title="Child类"></a>Child类</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword">extends</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> arr[];</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> arr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getSupperArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.getArr();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Child</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line"><span class="comment">//        this.count = 0;</span></span><br><span class="line"><span class="comment">//        this.arr = new int[MAX_NUM];</span></span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">" child"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">super</span>.getClass() + <span class="string">" super"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.hashCode());</span><br><span class="line">        System.out.println(<span class="keyword">super</span>.hashCode());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(<span class="keyword">int</span>[] arr)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.addAll(arr);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Child c = <span class="keyword">new</span> Child();</span><br><span class="line">        c.addAll(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;);</span><br><span class="line">        c.clear();</span><br><span class="line">        c.addAll(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;);</span><br><span class="line">        System.out.println(c.getArr());</span><br><span class="line">        System.out.println(c.getSupperArr());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>我们修改Child在执行以下代码的过程中,在debug窗口里我发现了以前没有注意的细节.</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Child c = <span class="keyword">new</span> Child();</span><br></pre></td></tr></table></figure>
+<p>以下是构造方法,child的count和arr并没有赋值语句</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">public</span> <span class="title">Child</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line"><span class="comment">//        this.count = 0;</span></span><br><span class="line"><span class="comment">//        this.arr = new int[MAX_NUM];</span></span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">" child"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">super</span>.getClass() + <span class="string">" super"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.hashCode());</span><br><span class="line">        System.out.println(<span class="keyword">super</span>.hashCode());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p><img src="../../assets/1541313325932.png" alt="1541313325932"></p>
+<p><img src="../../assets/1541313408861.png" alt="1541313408861"></p>
+<h4 id="执行c-clear"><a href="#执行c-clear" class="headerlink" title="执行c.clear();"></a>执行c.clear();</h4><h5 id="之前"><a href="#之前" class="headerlink" title="之前"></a>之前</h5><p><img src="../../assets/1541334057489.png" alt="1541334057489"></p>
+<h5 id="之后"><a href="#之后" class="headerlink" title="之后"></a>之后</h5><p><img src="../../assets/1541334095356.png" alt="1541334095356"></p>
+<p>可以看到Base.arr里的0,1,2位置的值都变回0了</p>
+<h5 id="一个疑问"><a href="#一个疑问" class="headerlink" title="一个疑问"></a>一个疑问</h5><p>在这个clear的例子中,调用父类的clear操作的是父类的变量,这是因为clear是属于父类Base的方法,为什么这个方法里的arr<strong>不会因为动态绑定而实际指向c</strong>的arr呢</p>
+<p><img src="../../assets/1541313605263.png" alt="1541313605263"></p>
+<p>让我们回顾这个图,类信息里记载了类实例方法,这里Base的action对应我们例子里的clear,方法的可见范围是在该类中的,和我们用子类实例取变量不同,也就是说Base里的action找到的arr是base的arr,而动态绑定发生在用c去找arr,也就是c.arr.</p>
+<h5 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h5><h6 id="修改后的Base"><a href="#修改后的Base" class="headerlink" title="修改后的Base"></a>修改后的Base</h6><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Arrays;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> arr[];</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> MAX_NUM = <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Base</span><span class="params">()</span> </span>&#123;</span><br><span class="line"><span class="comment">//        System.out.println(this.getClass());</span></span><br><span class="line">        <span class="keyword">this</span>.count = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">this</span>.arr = <span class="keyword">new</span> <span class="keyword">int</span>[MAX_NUM];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> arr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Directly access: "</span> + Arrays.hashCode(arr));</span><br><span class="line">        System.out.println(<span class="string">"Dynamic bonding: "</span> + Arrays.hashCode(getArr()));</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">            arr[i] = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        count = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> num)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (count &lt; MAX_NUM) &#123;</span><br><span class="line">            arr[count++] = num;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(<span class="keyword">int</span>[] arr)</span> </span>&#123;</span><br><span class="line"><span class="comment">//        System.out.println("addAll" + this.getClass());</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i : arr) &#123;</span><br><span class="line">            <span class="keyword">if</span> (count &lt; MAX_NUM) &#123;</span><br><span class="line">                <span class="keyword">this</span>.arr[count++] = i;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="修改后的Child"><a href="#修改后的Child" class="headerlink" title="修改后的Child"></a>修改后的Child</h6><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Arrays;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword">extends</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> arr[];</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> arr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getSupperArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.getArr();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Child</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line">        <span class="keyword">this</span>.count = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">this</span>.arr = <span class="keyword">new</span> <span class="keyword">int</span>[MAX_NUM];</span><br><span class="line"><span class="comment">//        System.out.println(this.getClass() + " child");</span></span><br><span class="line"><span class="comment">//        System.out.println(super.getClass() + " super");</span></span><br><span class="line"><span class="comment">//        System.out.println(this.hashCode());</span></span><br><span class="line"><span class="comment">//        System.out.println(super.hashCode());</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(<span class="keyword">int</span>[] arr)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.addAll(arr);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Child c = <span class="keyword">new</span> Child();</span><br><span class="line">        c.addAll(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;);</span><br><span class="line">        c.clear();</span><br><span class="line">        c.addAll(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;);</span><br><span class="line"><span class="comment">//        System.out.println(c.getArr());</span></span><br><span class="line"><span class="comment">//        System.out.println(c.getSupperArr());</span></span><br><span class="line">        System.out.println(<span class="string">"----------"</span>);</span><br><span class="line">        System.out.println(Arrays.hashCode(c.getArr()));</span><br><span class="line">        System.out.println(Arrays.hashCode(c.getSupperArr()));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h6 id="结果-1"><a href="#结果-1" class="headerlink" title="结果"></a>结果</h6><p><img src="../../assets/1541335986772.png" alt="1541335986772"></p>
+<p>仔细观察这个部分</p>
+<p><img src="../../assets/1541336049090.png" alt="1541336049090"></p>
+<p>可以看到在Base的clear里直接使用arr的话是Base的arr即-1533386817</p>
+<p>在Base使用getArr()由于方法的调用过程,动态绑定到子类的getArr(),于是使用的是子类Child的arr,即1493912449</p>
+<h3 id="几点值得注意的地方"><a href="#几点值得注意的地方" class="headerlink" title="几点值得注意的地方"></a>几点值得注意的地方</h3><ol>
+<li>Child类型的实例c里不光有自己的成员变量还包括父类Base的变量,就是上图中的Base.arr和Base.count,以前没注意过(；′⌒`)</li>
+<li>子类构造方法调用了父类构造方法而不做其他动作时,只会由父类构造方法操作父类的成员变量,而子类成员变量只会被赋默认值,所以子类构造方法在调用父类构造方法的同时,还要编写逻辑对自身的成员变量赋值,也就是反注释child构造方法中被注释的部分</li>
+<li>在Child的构造方法中,我们print了this和super的class和hashcode信息,可以在输出中看到,它们两个是同一个类型(Child类)并指向堆里同一个东西,这和之前讲的对象创建过程是一致的.这也是我之前忽略的一点(；′⌒`)</li>
+</ol>
+<p>引用资料</p>
+<ul>
+<li><a href="https://blog.csdn.net/qq_27093465/article/details/75339803" target="_blank" rel="noopener">Java普通代码块，构造代码块，静态代码块区别，执行顺序的代码实例</a></li>
+<li>&lt;&lt;Java编程的逻辑&gt;&gt;</li>
+</ul>
+
+      
+    </div>
+
+    
+
+    
+    
+    
+
+    
+
+    
+      <div>
+        <div style="padding: 10px 0; margin: 20px auto; width: 90%; text-align: center;">
+  <div>数额什么的无所谓,主要是能让我真正知道哪篇文章真的对你有用(๑*◡*๑)</div>
+  <button id="rewardButton" disable="enable" onclick="var qr = document.getElementById('QR'); if (qr.style.display === 'none') {qr.style.display='block';} else {qr.style.display='none'}">
+    <span>打赏</span>
+  </button>
+  <div id="QR" style="display: none;">
+
+    
+      <div id="wechat" style="display: inline-block">
+        <img id="wechat_qr" src="/images/wechatpay.png" alt="柿子君 微信支付">
+        <p>微信支付</p>
+      </div>
+    
+
+    
+      <div id="alipay" style="display: inline-block">
+        <img id="alipay_qr" src="/images/alipay.jpg" alt="柿子君 支付宝">
+        <p>支付宝</p>
+      </div>
+    
+
+    
+
+  </div>
+</div>
+
+      </div>
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Java/" rel="tag"># Java</a>
+          
+            <a href="/tags/继承/" rel="tag"># 继承</a>
+          
+        </div>
+      
+
+      
+      
+        <div class="post-widgets">
+        
+          <div class="wp_rating">
+            <div id="wpac-rating"></div>
+          </div>
+        
+
+        
+
+        
+          
+            <span class="post-meta-divider">|</span>
+          
+          <div class="social_share">
+            
+            
+               <div id="needsharebutton-postbottom">
+                 <span class="btn">
+                    <i class="fa fa-share-alt" aria-hidden="true"></i>
+                 </span>
+               </div>
+            
+          </div>
+        
+        </div>
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/02/j2/" rel="next" title="Java继承相关知识以及新的理解">
+                <i class="fa fa-chevron-left"></i> Java继承相关知识以及新的理解
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+  </div>
+
+
+          </div>
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="/images/avatar.png" alt="柿子君">
+            
+              <p class="site-author-name" itemprop="name">柿子君</p>
+              <p class="site-description motion-element" itemprop="description">一只睡不醒的程序猿</p>
+          </div>
+
+          
+            <nav class="site-state motion-element">
+              
+                <div class="site-state-item site-state-posts">
+                
+                  <a href="/archives/">
+                
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">日志</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-categories">
+                  <a href="/categories/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">2</span>
+                    <span class="site-state-item-name">分类</span>
+                  </a>
+                </div>
+              
+
+              
+                
+                
+                <div class="site-state-item site-state-tags">
+                  <a href="/tags/index.html">
+                    
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                      
+                    
+                    <span class="site-state-item-count">4</span>
+                    <span class="site-state-item-name">标签</span>
+                  </a>
+                </div>
+              
+            </nav>
+          
+
+          
+
+          
+            <div class="links-of-author motion-element">
+              
+                <span class="links-of-author-item">
+                  <a href="https://github.com/SheezyGuo" target="_blank" title="GitHub"><i class="fa fa-fw fa-github"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="mailto:gsh.hetai@qq.com" target="_blank" title="E-Mail"><i class="fa fa-fw fa-envelope"></i></a>
+                  
+                </span>
+              
+                <span class="links-of-author-item">
+                  <a href="https://weibo.com/u/3676034481/home" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  
+                </span>
+              
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+            
+          
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#相关知识"><span class="nav-number">1.</span> <span class="nav-text">相关知识</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#代码示例"><span class="nav-number">1.1.</span> <span class="nav-text">代码示例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Base代码"><span class="nav-number">1.1.1.</span> <span class="nav-text">Base代码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Child代码"><span class="nav-number">1.1.2.</span> <span class="nav-text">Child代码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#调用代码"><span class="nav-number">1.1.3.</span> <span class="nav-text">调用代码</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#结果"><span class="nav-number">1.1.4.</span> <span class="nav-text">结果</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#补充知识"><span class="nav-number">1.1.5.</span> <span class="nav-text">补充知识</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#普通代码块"><span class="nav-number">1.1.5.1.</span> <span class="nav-text">普通代码块</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#构造代码块"><span class="nav-number">1.1.5.2.</span> <span class="nav-text">构造代码块</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#静态代码块"><span class="nav-number">1.1.5.3.</span> <span class="nav-text">静态代码块</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#例子"><span class="nav-number">1.1.5.4.</span> <span class="nav-text">例子</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#类加载过程"><span class="nav-number">1.2.</span> <span class="nav-text">类加载过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#类的信息"><span class="nav-number">1.2.1.</span> <span class="nav-text">类的信息</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#类加载过程包括"><span class="nav-number">1.2.2.</span> <span class="nav-text">类加载过程包括</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#对象创建的过程"><span class="nav-number">1.3.</span> <span class="nav-text">对象创建的过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#方法调用的过程"><span class="nav-number">1.4.</span> <span class="nav-text">方法调用的过程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#虚方法表"><span class="nav-number">1.4.1.</span> <span class="nav-text">虚方法表</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#研究代码"><span class="nav-number">2.</span> <span class="nav-text">研究代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Base类"><span class="nav-number">2.1.</span> <span class="nav-text">Base类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Child类"><span class="nav-number">2.2.</span> <span class="nav-text">Child类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#调试"><span class="nav-number">2.3.</span> <span class="nav-text">调试</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#执行c-clear"><span class="nav-number">2.3.1.</span> <span class="nav-text">执行c.clear();</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#之前"><span class="nav-number">2.3.1.1.</span> <span class="nav-text">之前</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#之后"><span class="nav-number">2.3.1.2.</span> <span class="nav-text">之后</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#一个疑问"><span class="nav-number">2.3.1.3.</span> <span class="nav-text">一个疑问</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#验证"><span class="nav-number">2.3.1.4.</span> <span class="nav-text">验证</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#修改后的Base"><span class="nav-number">2.3.1.4.1.</span> <span class="nav-text">修改后的Base</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#修改后的Child"><span class="nav-number">2.3.1.4.2.</span> <span class="nav-text">修改后的Child</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#结果-1"><span class="nav-number">2.3.1.4.3.</span> <span class="nav-text">结果</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#几点值得注意的地方"><span class="nav-number">2.4.</span> <span class="nav-text">几点值得注意的地方</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright"> &copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">柿子君</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+    <span title="站点总字数">30k</span>
+  
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-coffee"></i>
+    </span>
+    
+    <span title="站点阅读时长">49 分钟</span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+
+        
+<div class="busuanzi-count">
+  <script async src="https://busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+
+  
+    <span class="site-uv" title="总访客量">
+      <i class="fa fa-user"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_uv"></span>
+    </span>
+  
+
+  
+    <span class="site-pv" title="总访问量">
+      <i class="fa fa-eye"></i>
+      <span class="busuanzi-value" id="busuanzi_value_site_pv"></span>
+    </span>
+  
+</div>
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+      <div id="needsharebutton-float">
+        <span class="btn">
+          <i class="fa fa-share-alt" aria-hidden="true"></i>
+        </span>
+      </div>
+    
+	
+    
+
+    
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+    
+      
+        
+      
+  
+  <script type="text/javascript" color="0,0,255" opacity="0.5" zindex="-1" count="99" src="//cdn.jsdelivr.net/gh/theme-next/theme-next-canvas-nest@1.0.0/canvas-nest.min.js"></script>
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/reading_progress/reading_progress.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=6.4.2"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=6.4.2"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=6.4.2"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=6.4.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=6.4.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=6.4.2"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  
+  
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail';
+    guest = guest.split(',').filter(function (item) {
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: true,
+        notify: true,
+        appId: '7jDSoXF4MnJ7uojX0cvVOxo8-gzGzoHsz',
+        appKey: '0YGRzvdk8mAot417s38mr9Kw',
+        placeholder: '来啊,造作啊(◕ᴗ◕✿)',
+        avatar:'mm',
+        meta:guest,
+        pageSize:'10' || 10,
+        visitor: false
+    });
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script>
+    
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+
+      Counter('get', '/classes/Counter', { where: JSON.stringify({ url }) })
+        .done(function ({ results }) {
+          if (results.length > 0) {
+            var counter = results[0];
+            
+            Counter('put', `/classes/Counter/${counter.objectId}`, JSON.stringify({ time: { "__op":"Increment", "amount":1 } }))
+            
+            .done(function () {
+                  var $element = $(document.getElementById(url));
+                  $element.find('.leancloud-visitors-count').text(counter.time + 1);
+            })
+            
+            .fail(function ({ responseJSON }) {
+                console.log('Failed to save Visitor num, with error message: ' + responseJSON.error);
+            })
+          } else {
+            
+              Counter('post', '/classes/Counter', JSON.stringify({ title: title, url: url, time: 1}))
+                .done(function () {
+                  var $element = $(document.getElementById(url));
+                  $element.find('.leancloud-visitors-count').text(1);
+                })
+                .fail(function () {
+                  console.log('Failed to create');
+                });
+            
+          }
+        })
+      .fail(function ({ responseJSON }) {
+        console.log('LeanCloud Counter Error:' + responseJSON.code + " " + responseJSON.error);
+      });
+    }
+    
+
+    $(function() {
+      $.get('https://app-router.leancloud.cn/2/route?appId=' + "7jDSoXF4MnJ7uojX0cvVOxo8-gzGzoHsz")
+        .done(function ({ api_server }) {
+          var Counter = function (method, url, data) {
+            return $.ajax({
+              method: method,
+              url: `https://${api_server}/1.1${url}`,
+              headers: {
+                'X-LC-Id': "7jDSoXF4MnJ7uojX0cvVOxo8-gzGzoHsz",
+                'X-LC-Key': "0YGRzvdk8mAot417s38mr9Kw",
+                'Content-Type': 'application/json',
+              },
+              data: data,
+            });
+          };
+          
+          addCount(Counter);
+          
+        })
+    });
+  </script>
+
+
+
+  
+
+  
+<script>
+(function(){
+    var bp = document.createElement('script');
+    var curProtocol = window.location.protocol.split(':')[0];
+    if (curProtocol === 'https') {
+        bp.src = 'https://zz.bdstatic.com/linksubmit/push.js';        
+    }
+    else {
+        bp.src = 'http://push.zhanzhang.baidu.com/push.js';
+    }
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(bp, s);
+})();
+</script>
+
+
+  
+
+  
+  
+
+  
+  
+
+  
+
+
+  
+  
+  
+  <script src="/lib/needsharebutton/needsharebutton.js"></script>
+
+  <script>
+    
+      pbOptions = {};
+      
+          pbOptions.iconStyle = "box";
+      
+          pbOptions.boxForm = "horizontal";
+      
+          pbOptions.position = "bottomCenter";
+      
+          pbOptions.networks = "Weibo,Wechat,Douban,QQZone,Twitter,Facebook";
+      
+      new needShareButton('#needsharebutton-postbottom', pbOptions);
+    
+    
+      flOptions = {};
+      
+          flOptions.iconStyle = "box";
+      
+          flOptions.boxForm = "horizontal";
+      
+          flOptions.position = "middleRight";
+      
+          flOptions.networks = "Weibo,Wechat,Douban,QQZone,Twitter,Facebook";
+      
+      new needShareButton('#needsharebutton-float', flOptions);
+    
+  </script>
+
+  
+  <script type="text/javascript">
+  wpac_init = window.wpac_init || [];
+  wpac_init.push({widget: 'Rating', id: 14685,
+    el: 'wpac-rating',
+    color: 'fc6423'
+  });
+  (function() {
+    if ('WIDGETPACK_LOADED' in window) return;
+    WIDGETPACK_LOADED = true;
+    var mc = document.createElement('script');
+    mc.type = 'text/javascript';
+    mc.async = true;
+    mc.src = '//embed.widgetpack.com/widget.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(mc, s.nextSibling);
+  })();
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+  
+  <style>
+    .copy-btn {
+      display: inline-block;
+      padding: 6px 12px;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 20px;
+      color: #333;
+      white-space: nowrap;
+      vertical-align: middle;
+      cursor: pointer;
+      background-color: #eee;
+      background-image: linear-gradient(#fcfcfc, #eee);
+      border: 1px solid #d5d5d5;
+      border-radius: 3px;
+      user-select: none;
+      outline: 0;
+    }
+
+    .highlight-wrap .copy-btn {
+      transition: opacity .3s ease-in-out;
+      opacity: 0;
+      padding: 2px 6px;
+      position: absolute;
+      right: 4px;
+      top: 8px;
+    }
+
+    .highlight-wrap:hover .copy-btn,
+    .highlight-wrap .copy-btn:focus {
+      opacity: 1
+    }
+
+    .highlight-wrap {
+      position: relative;
+    }
+  </style>
+  <script>
+    $('.highlight').each(function (i, e) {
+      var $wrap = $('<div>').addClass('highlight-wrap')
+      $(e).after($wrap)
+      $wrap.append($('<button>').addClass('copy-btn').append('复制').on('click', function (e) {
+        var code = $(this).parent().find('.code').find('.line').map(function (i, e) {
+          return $(e).text()
+        }).toArray().join('\n')
+        var ta = document.createElement('textarea')
+        document.body.appendChild(ta)
+        ta.style.position = 'absolute'
+        ta.style.top = '0px'
+        ta.style.left = '0px'
+        ta.value = code
+        ta.select()
+        ta.focus()
+        var result = document.execCommand('copy')
+        document.body.removeChild(ta)
+        
+          if(result)$(this).text('复制成功')
+          else $(this).text('复制失败')
+        
+        $(this).blur()
+      })).on('mouseleave', function (e) {
+        var $b = $(this).find('.copy-btn')
+        setTimeout(function () {
+          $b.text('复制')
+        }, 300)
+      }).append(e)
+    })
+  </script>
+
+
+<script src="/live2dw/lib/L2Dwidget.min.js?0c58a1486de42ac6cc1c59c7d98ae887"></script><script>L2Dwidget.init({"pluginRootPath":"live2dw/","pluginJsPath":"lib/","pluginModelPath":"assets/","tagMode":false,"debug":false,"model":{"jsonPath":"/live2dw/assets/tororo.model.json"},"display":{"position":"right","width":150,"height":300},"mobile":{"show":false},"log":false});</script></body>
+</html>
