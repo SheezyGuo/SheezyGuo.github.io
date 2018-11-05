@@ -129,23 +129,23 @@
 <meta property="og:site_name" content="柿子的博客(〃&#39;▽&#39;〃)">
 <meta property="og:description" content="在上一篇文章中,我们发现类继承过程中,如果父类定义的方法如果子类没有重写或者重载的话,子类由于继承关系虽然能访问这个方法,但是执行的操作是在Base类之上的,这和我们的预期不同.在Child类中通过覆盖父类方法,并添加相关处理逻辑可以解决这个问题,但仔细思考了一下之后,感觉还是有点疑惑. 为什么Child类的实例里执行没有覆盖直接继承的方法,比如clear(见下方研究代码部分),这个方法对chil">
 <meta property="og:locale" content="zh-CN">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541331506443.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541331658409.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541306545341.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541313605263.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541331914385.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541313325932.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541313408861.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541334057489.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541334095356.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541313605263.png">
-<meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541335986772.png">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/19589723.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/53328453.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/87221926.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/9084254.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/18694845.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/69865961.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/17093482.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/20834285.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/67085137.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/6572972.jpg">
+<meta property="og:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/40783373.jpg">
 <meta property="og:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541336049090.png">
-<meta property="og:updated_time" content="2018-11-04T13:15:23.136Z">
+<meta property="og:updated_time" content="2018-11-05T09:20:39.665Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Java中方法调用过程的一个疑惑">
 <meta name="twitter:description" content="在上一篇文章中,我们发现类继承过程中,如果父类定义的方法如果子类没有重写或者重载的话,子类由于继承关系虽然能访问这个方法,但是执行的操作是在Base类之上的,这和我们的预期不同.在Child类中通过覆盖父类方法,并添加相关处理逻辑可以解决这个问题,但仔细思考了一下之后,感觉还是有点疑惑. 为什么Child类的实例里执行没有覆盖直接继承的方法,比如clear(见下方研究代码部分),这个方法对chil">
-<meta name="twitter:image" content="https://sheezyguo.github.io/2018/11/02/j3/1541331506443.png">
+<meta name="twitter:image" content="http://phpmt1k4m.bkt.clouddn.com/18-11-5/19589723.jpg">
 
 
 
@@ -400,7 +400,7 @@
                 
                   <span class="post-meta-item-text">更新于</span>
                 
-                <time title="修改时间：2018-11-04 21:15:23" itemprop="dateModified" datetime="2018-11-04T21:15:23+08:00">2018-11-04</time>
+                <time title="修改时间：2018-11-05 17:20:39" itemprop="dateModified" datetime="2018-11-05T17:20:39+08:00">2018-11-05</time>
               
             
           </span>
@@ -516,9 +516,9 @@
 <p>调用</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">LineTest</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"主方法"</span>);</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(<span class="string">"main方法中最开始的，普通代码块执行"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        Line line = <span class="keyword">new</span> Line();</span><br><span class="line">        System.out.println(<span class="string">"..............."</span>);</span><br><span class="line">        Line line1 = <span class="keyword">new</span> Line();</span><br><span class="line">        System.out.println(<span class="string">"..............."</span>);</span><br><span class="line">        &#123;</span><br><span class="line">            System.out.println(<span class="string">"main方法中结尾事的，普通代码块执行"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <p>结果</p>
-<p><img src="/2018/11/02/j3/1541331506443.png" alt="1541331506443"></p>
+<p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/19589723.jpg" alt=""></p>
 <p>注意红箭头所指的两部分的顺序取决于它出现的顺序</p>
-<p><img src="/2018/11/02/j3/1541331658409.png" alt="1541331658409"></p>
+<p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/53328453.jpg" alt=""></p>
 <p>##### </p>
 <p>下面我们来解释一下背后都发生了一些什么事情，从类的加载开始。</p>
 <h3 id="类加载过程"><a href="#类加载过程" class="headerlink" title="类加载过程"></a>类加载过程</h3><p>在Java中，所谓类的加载是指将类的相关信息加载到内存。在Java中，类是动态加载的，<strong>当第一次使用这个类的时候才会加载</strong>，加载一个类时，<strong>会查看其父类是否已加载，如果没有，则会加载其父类</strong>。</p>
@@ -571,7 +571,7 @@
 <p>之前我们说过，内存分为栈和堆，栈存放函数的局部变量，而堆存放动态分配的对象，还有一个内存区，存放类的信息，这个区在Java中称为<strong>方法区</strong>。</p>
 <p>加载后，Java方法区就有了一份这个类的信息。以我们的例子来说，有3份类信息，分别是Child、</p>
 <p>Base、Object，内存布局如下图所示。</p>
-<p><img src="/2018/11/02/j3/1541306545341.png" alt="1541306545341"></p>
+<p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/87221926.jpg" alt=""></p>
 <p>从上图也可以看出,类信息包括这几部分,这和前面说的一致</p>
 <ol>
 <li><p>父类信息</p>
@@ -598,7 +598,7 @@
 <p><strong>每个对象除了保存类的实例变量之外，还保存着实际类信息的引用。</strong></p>
 <p>Child c=new Child()；会将新创建的Child对象引用赋给变量c，而Base b=c；会让b也引用这个Child</p>
 <p>对象。创建和赋值后，内存布局如下图所示。</p>
-<p><img src="/2018/11/02/j3/1541313605263.png" alt="1541313605263"></p>
+<p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/9084254.jpg" alt=""></p>
 <p>引用型变量c和b分配在栈中，它们<strong>指向相同的堆中的Child对象</strong>。<strong>Child对象存储着方法区中Child类型的地址，<u>还有Base中的实例变量a和Child中的实例变量a</u></strong>。创建了对象，接下来，来看方法调用的过程。</p>
 <h3 id="方法调用的过程"><a href="#方法调用的过程" class="headerlink" title="方法调用的过程"></a>方法调用的过程</h3><p>我们先来看c.action();,这旬代码的执行过程：</p>
 <ol>
@@ -620,7 +620,7 @@
 <p>可以看到action调用了step方法,由于Child类重写了step方法,实例c找到的step方法就是Child类的step方法.这和上一篇里的clear方法的查找过程是一致的,但这里又有一个新的值得注意的地方,clear例子中clear修改的是父类实例变量,而这里的step操作的是子类变量.究其原因,和以下内容有关.</p>
 <h4 id="虚方法表"><a href="#虚方法表" class="headerlink" title="虚方法表"></a>虚方法表</h4><p>如果继承的层次比较深，要调用的方法位千比较上层的父类，则调用的效率是比较低的，因为每次调用都要进行很多次查找。大多数系统使用一种称为虚方法表的方法来优化调用的效率。</p>
 <p>所谓虚方法表，<strong>就是在类加载的时候为每个类创建一个表，记录该类的对象所有动态绑定的方法   (包括父类的方法)及其地址</strong>，但一个方法只有一条记录，子类重写了父类方法后只会保留子类的。对于本例来说，Child和Base的虚方法表如图下所示。</p>
-<p><img src="/2018/11/02/j3/1541331914385.png" alt="1541331914385"></p>
+<p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/18694845.jpg" alt=""></p>
 <p>Child类的实例c在调用action时,Child没有action方法,故向上查父类,在直接父类Base中找到了,Base中的action调用了step,实例c继续查找step,Child类里有step方法,于是调用的是Child的step方法.</p>
 <p>虚方法表的设计理念与操作系统里的缓存有类似之处,不过缓存是储存最近一段时间里最常访问的记录,会动态变化,而虚方法表是固定的,这么来说虚方法表更像数据库里的索引,不过索引到最后可能也有个顺序查找的过程.</p>
 <h2 id="研究代码"><a href="#研究代码" class="headerlink" title="研究代码"></a>研究代码</h2><p><strong>以下是个人的理解,不正之处欢迎指出</strong></p>
@@ -630,17 +630,17 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Child c = <span class="keyword">new</span> Child();</span><br></pre></td></tr></table></figure>
 <p>以下是构造方法,child的count和arr并没有赋值语句</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"> <span class="function"><span class="keyword">public</span> <span class="title">Child</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line"><span class="comment">//        this.count = 0;</span></span><br><span class="line"><span class="comment">//        this.arr = new int[MAX_NUM];</span></span><br><span class="line">        System.out.println(<span class="keyword">this</span>.getClass() + <span class="string">" child"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">super</span>.getClass() + <span class="string">" super"</span>);</span><br><span class="line">        System.out.println(<span class="keyword">this</span>.hashCode());</span><br><span class="line">        System.out.println(<span class="keyword">super</span>.hashCode());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p><img src="/2018/11/02/j3/1541313325932.png" alt="1541313325932"></p>
-<p><img src="/2018/11/02/j3/1541313408861.png" alt="1541313408861"></p>
-<h4 id="执行c-clear"><a href="#执行c-clear" class="headerlink" title="执行c.clear();"></a>执行c.clear();</h4><h5 id="之前"><a href="#之前" class="headerlink" title="之前"></a>之前</h5><p><img src="/2018/11/02/j3/1541334057489.png" alt="1541334057489"></p>
-<h5 id="之后"><a href="#之后" class="headerlink" title="之后"></a>之后</h5><p><img src="/2018/11/02/j3/1541334095356.png" alt="1541334095356"></p>
+<h3 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h3><p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/69865961.jpg" alt=""></p>
+<p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/17093482.jpg" alt=""></p>
+<h4 id="执行c-clear"><a href="#执行c-clear" class="headerlink" title="执行c.clear();"></a>执行c.clear();</h4><h5 id="之前"><a href="#之前" class="headerlink" title="之前"></a>之前</h5><p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/20834285.jpg" alt=""></p>
+<h5 id="之后"><a href="#之后" class="headerlink" title="之后"></a>之后</h5><p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/67085137.jpg" alt=""></p>
 <p>可以看到Base.arr里的0,1,2位置的值都变回0了</p>
 <h5 id="一个疑问"><a href="#一个疑问" class="headerlink" title="一个疑问"></a>一个疑问</h5><p>在这个clear的例子中,调用父类的clear操作的是父类的变量,这是因为clear是属于父类Base的方法,为什么这个方法里的arr<strong>不会因为动态绑定而实际指向c</strong>的arr呢</p>
-<p><img src="/2018/11/02/j3/1541313605263.png" alt="1541313605263"></p>
+<p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/6572972.jpg" alt=""></p>
 <p>让我们回顾这个图,类信息里记载了类实例方法,这里Base的action对应我们例子里的clear,方法的可见范围是在该类中的,和我们用子类实例取变量不同,也就是说Base里的action找到的arr是base的arr,而动态绑定发生在用c去找arr,也就是c.arr.</p>
 <h5 id="验证"><a href="#验证" class="headerlink" title="验证"></a>验证</h5><h6 id="修改后的Base"><a href="#修改后的Base" class="headerlink" title="修改后的Base"></a>修改后的Base</h6><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Arrays;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> arr[];</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">final</span> <span class="keyword">static</span> <span class="keyword">int</span> MAX_NUM = <span class="number">100</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Base</span><span class="params">()</span> </span>&#123;</span><br><span class="line"><span class="comment">//        System.out.println(this.getClass());</span></span><br><span class="line">        <span class="keyword">this</span>.count = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">this</span>.arr = <span class="keyword">new</span> <span class="keyword">int</span>[MAX_NUM];</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> arr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">clear</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        System.out.println(<span class="string">"Directly access: "</span> + Arrays.hashCode(arr));</span><br><span class="line">        System.out.println(<span class="string">"Dynamic bonding: "</span> + Arrays.hashCode(getArr()));</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">            arr[i] = <span class="number">0</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        count = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(<span class="keyword">int</span> num)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (count &lt; MAX_NUM) &#123;</span><br><span class="line">            arr[count++] = num;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(<span class="keyword">int</span>[] arr)</span> </span>&#123;</span><br><span class="line"><span class="comment">//        System.out.println("addAll" + this.getClass());</span></span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> i : arr) &#123;</span><br><span class="line">            <span class="keyword">if</span> (count &lt; MAX_NUM) &#123;</span><br><span class="line">                <span class="keyword">this</span>.arr[count++] = i;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h6 id="修改后的Child"><a href="#修改后的Child" class="headerlink" title="修改后的Child"></a>修改后的Child</h6><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> java.util.Arrays;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Child</span> <span class="keyword">extends</span> <span class="title">Base</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> arr[];</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> count;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> arr;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">int</span>[] getSupperArr() &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">super</span>.getArr();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">Child</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>();</span><br><span class="line">        <span class="keyword">this</span>.count = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">this</span>.arr = <span class="keyword">new</span> <span class="keyword">int</span>[MAX_NUM];</span><br><span class="line"><span class="comment">//        System.out.println(this.getClass() + " child");</span></span><br><span class="line"><span class="comment">//        System.out.println(super.getClass() + " super");</span></span><br><span class="line"><span class="comment">//        System.out.println(this.hashCode());</span></span><br><span class="line"><span class="comment">//        System.out.println(super.hashCode());</span></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addAll</span><span class="params">(<span class="keyword">int</span>[] arr)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.addAll(arr);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;</span><br><span class="line">        Child c = <span class="keyword">new</span> Child();</span><br><span class="line">        c.addAll(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;);</span><br><span class="line">        c.clear();</span><br><span class="line">        c.addAll(<span class="keyword">new</span> <span class="keyword">int</span>[]&#123;<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>&#125;);</span><br><span class="line"><span class="comment">//        System.out.println(c.getArr());</span></span><br><span class="line"><span class="comment">//        System.out.println(c.getSupperArr());</span></span><br><span class="line">        System.out.println(<span class="string">"----------"</span>);</span><br><span class="line">        System.out.println(Arrays.hashCode(c.getArr()));</span><br><span class="line">        System.out.println(Arrays.hashCode(c.getSupperArr()));</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-<h6 id="结果-1"><a href="#结果-1" class="headerlink" title="结果"></a>结果</h6><p><img src="/2018/11/02/j3/1541335986772.png" alt="1541335986772"></p>
+<h6 id="结果-1"><a href="#结果-1" class="headerlink" title="结果"></a>结果</h6><p><img src="http://phpmt1k4m.bkt.clouddn.com/18-11-5/40783373.jpg" alt=""></p>
 <p>仔细观察这个部分</p>
 <p><img src="/2018/11/02/j3/1541336049090.png" alt="1541336049090"></p>
 <p>可以看到在Base的clear里直接使用arr的话是Base的arr即-1533386817</p>
@@ -890,7 +890,7 @@
                 </span>
               
                 <span class="links-of-author-item">
-                  <a href="https://weibo.com/u/3676034481/home" target="_blank" title="Weibo"><i class="fa fa-fw fa-weibo"></i></a>
+                  <a href="https://me.csdn.net/SiYueDePuTaoShu" target="_blank" title="CSDN"><i class="fa fa-fw fa-copyright"></i></a>
                   
                 </span>
               
@@ -1152,7 +1152,7 @@
         notify: true,
         appId: '7jDSoXF4MnJ7uojX0cvVOxo8-gzGzoHsz',
         appKey: '0YGRzvdk8mAot417s38mr9Kw',
-        placeholder: '来啊,造作啊(◕ᴗ◕✿)',
+        placeholder: '写博客有时候也很枯燥,即便是一两句简单的话也是我前进的动力...来啊,造作啊(◕ᴗ◕✿)',
         avatar:'mm',
         meta:guest,
         pageSize:'10' || 10,
